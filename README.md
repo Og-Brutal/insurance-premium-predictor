@@ -150,15 +150,17 @@ sequenceDiagram
     actor User
     participant UI as 🎨 Streamlit UI
     participant API as 🔌 FastAPI /predict
-    participant PY as 🧩 Pydantic UserInput
+    participant PY as 🧩 Pydantic Schemas
     participant M as 🌲 Model (model.pkl)
 
     User->>UI: Enters age, weight, city, etc.
     UI->>UI: Live risk preview (BMI, tier, risk)
     UI->>API: POST /predict { raw profile }
-    API->>PY: Validate + compute bmi, age_group,<br/>lifestyle_risk, city_tier
+    API->>PY: Validate UserInput + compute bmi, age_group,<br/>lifestyle_risk, city_tier
     PY->>M: pipeline.predict() + predict_proba()
     M-->>API: class + confidence + probabilities
+    API->>PY: Validate response (PredictionResponse)
+    PY-->>API: validated Prediction
     API-->>UI: Prediction JSON
     UI-->>User: Band + confidence + class probabilities
 ```
