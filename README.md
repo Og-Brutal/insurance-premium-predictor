@@ -77,11 +77,12 @@ flowchart LR
     end
 
     UI -- "JSON request" --> R3
-    R3 --> SCHEMA
+    R3 -- "validate UserInput" --> SCHEMA
     SCHEMA --> PRED
     PRED --> PKL
     PKL -- "class + probabilities" --> PRED
-    PRED -- "JSON response" --> UI
+    PRED -- "validate PredictionResponse" --> SCHEMA
+    SCHEMA -- "JSON response" --> UI
 
     classDef ui fill:#2DD4BF,stroke:#0F766E,color:#062B27,stroke-width:2px;
     classDef api fill:#1E293B,stroke:#38BDF8,color:#E2E8F0,stroke-width:2px;
@@ -218,7 +219,7 @@ sequenceDiagram
 ## 📂 Project Structure
 
 ```
-insurance-premium-predictor/
+Insurance_Premium_ML_Model/
 ├── 📓 fastapi_ml_model.ipynb     # Training notebook: feature eng → pipeline → pickle
 ├── 🚀 main.py                    # FastAPI app: /, /health, /predict
 ├── 🎨 frontend.py                # Streamlit dark-themed dashboard
