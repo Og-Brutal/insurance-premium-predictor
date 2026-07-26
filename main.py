@@ -22,4 +22,17 @@ def HealthCheck():
              "Model-Loaded":model is not None
              }
 
+########################### About Response Model ########################################
+# response_model in FastAPI validates and shapes only the OUTGOING data that FastAPI itself
+# converts to JSON (a dict, list, or Pydantic model) — it checks types, enforces the schema,
+# strips out any extra/undeclared fields (great for security), and auto-documents the response
+# in /docs. However, if you manually return a Response object like JSONResponse, HTMLResponse,
+# etc., FastAPI treats it as already "finished" and passes it straight through AS-IS — response_model
+# validation, filtering, and doc generation are all SKIPPED, so the data can be any shape and no
+# error will be raised even if it doesn't match the schema. To get validation while still using
+# JSONResponse (e.g. for custom status codes/headers), first build the Pydantic model manually
+# (this triggers validation) and then dump it into JSONResponse via .model_dump(), e.g.
+# JSONResponse(status_code=200, content=SomeModel(...).model_dump()). If you don't need a custom
+# status code or headers, skip JSONResponse entirely and just `return` the Pydantic model/dict
+# directly — that's the only way to get FastAPI's full automatic validation + docs behavior.
 
