@@ -56,7 +56,6 @@ def Predict_Premium(userInput : UserInput):
 
         return {
             "Prediction":prediction,
-            
         }
     except Exception as e:
 
