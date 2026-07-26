@@ -1,5 +1,9 @@
 from fastapi import FastAPI
+from schema.User_Input import UserInput
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from model.predict import predict_Premium,MODEL_VERSION,model
+from schema.Prediction_Response import PredictionResponse
 
 app=FastAPI()
 
@@ -36,3 +40,24 @@ def HealthCheck():
 # status code or headers, skip JSONResponse entirely and just `return` the Pydantic model/dict
 # directly — that's the only way to get FastAPI's full automatic validation + docs behavior.
 
+@app.post("/predict",response_model=PredictionResponse)
+def Predict_Premium(userInput : UserInput):
+
+    user_input={
+        'bmi': userInput.bmi,
+        'age_group': userInput.age_group,
+        'lifestyle_risk': userInput.lifestyle_risk,
+        'city_tier': userInput.city_tier,
+        'income_lpa': userInput.income_lpa,
+        'occupation': userInput.occupation
+    }
+    try :
+        prediction=predict_Premium(user_input)
+
+        return {
+            "Prediction":prediction,
+            
+        }
+    except Exception as e:
+
+        raise HTTPException(status_code=500,detail={"message":"Server Side ERROR During Prediction."})
