@@ -60,3 +60,18 @@ def Predict_Premium(userInput : UserInput):
     except Exception as e:
 
         raise HTTPException(status_code=500,detail={"message":"Server Side ERROR During Prediction."})
+
+
+# if you are using JSONResponse then remember it only accepts an object that is json serializable
+# if you pass a pydantic model directly in JSONResponse it will give an error because a model 
+# instance is not json serializable
+
+# model_dump_json() does NOT return a dict, it returns a JSON-encoded STRING
+# if you pass this string into JSONResponse, it will be WRONG:
+# JSONResponse will call json.dumps() on it again internally (double encoding),
+# so the string ends up wrapped/escaped in extra quotes -> e.g. "{\"id\":1,\"name\":\"foo\"}"
+
+# fix: 
+# - for JSONResponse -> use model_dump() (returns a dict, gets encoded once, correctly)
+# - if you specifically want model_dump_json() -> use plain Response(media_type="application/json") instead,
+#   since Response writes the body as-is without re-encoding it
