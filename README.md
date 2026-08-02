@@ -18,6 +18,16 @@
 ![Model Accuracy](https://img.shields.io/badge/test%20accuracy-~90%25-34D399?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
+<br/>
+
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-Deployed-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)
+
+**🔴 Live Demo**
+
+[![Open App](https://img.shields.io/badge/🎨_Frontend-Live_App-FF4B4B?style=for-the-badge)](https://insurance-premium-predictor-frontend-production.up.railway.app)
+[![API Docs](https://img.shields.io/badge/🔌_Backend-API_Docs-009688?style=for-the-badge)](https://insurance-premium-predictor-api-production.up.railway.app/docs)
+
 </div>
 
 ---
@@ -32,6 +42,7 @@
 - [Project Structure](#-project-structure)
 - [Tech Stack](#-tech-stack)
 - [Getting Started](#-getting-started)
+- [Docker & Deployment](#-docker--deployment)
 - [API Reference](#-api-reference)
 - [The Frontend](#-the-frontend)
 - [Disclaimer](#-disclaimer)
@@ -235,7 +246,12 @@ Insurance_Premium_ML_Model/
 │   └── city_tiers.py             # Tier 1 / Tier 2 city lists
 ├── 🎛️ .streamlit/
 │   └── config.toml               # Dark theme config
-└── 📋 requirements.txt
+├── 🐳 DockerFile.Backend         # Image build for the FastAPI API
+├── 🐳 DockerFile.Frontend        # Image build for the Streamlit UI
+├── 🧩 docker-compose.yml         # Runs both images on one Docker network (local)
+├── 🔐 .env                       # API_BASE_URL for the frontend container
+├── 📋 requirements-backend.txt   # API deps (fastapi, uvicorn, pydantic, pandas, sklearn)
+└── 📋 requirements-frontend.txt  # UI deps (streamlit, pandas, requests)
 ```
 
 ---
@@ -268,9 +284,10 @@ venv\Scripts\activate
 # macOS / Linux
 source venv/bin/activate
 
-pip install -r requirements.txt
-# the Streamlit frontend also needs the requests library:
-pip install requests
+# API deps
+pip install -r requirements-backend.txt
+# UI deps
+pip install -r requirements-frontend.txt
 ```
 
 ### 2. Start the backend (FastAPI)
@@ -290,6 +307,65 @@ streamlit run frontend.py
 ```
 
 Dashboard opens at **http://localhost:8501**. The **"API online"** badge turns green once the backend is reachable.
+
+> 💡 The frontend reads its backend address from the **`API_BASE_URL`** environment variable, defaulting to `http://localhost:8000`. When running everything by hand this default just works — no `.env` needed.
+
+---
+
+## 🐳 Docker & Deployment
+
+The app ships as **two independent images** — one for the API, one for the UI — so each can be built, versioned, and scaled on its own.
+
+| Service | Dockerfile | Image | Port |
+|---------|------------|-------|------|
+| 🔌 **Backend API** | `DockerFile.Backend` | [`wahab2825/insurance-premium-predictor-api`](https://hub.docker.com/r/wahab2825/insurance-premium-predictor-api) | `8000` |
+| 🎨 **Frontend UI** | `DockerFile.Frontend` | [`wahab2825/insurance-premium-predictor-frontend`](https://hub.docker.com/r/wahab2825/insurance-premium-predictor-frontend) | `8501` |
+
+### 🧩 Run locally with Docker Compose
+
+The compose file wires both containers onto a single Docker network. The frontend reaches the backend by its **service name** (`http://backend:8000`) — supplied via the `.env` file (`API_BASE_URL=http://backend:8000`), not `localhost`.
+
+```bash
+docker compose up
+```
+
+- 🎨 Frontend → **http://localhost:8501**
+- 🔌 Backend → **http://localhost:8000** (docs at `/docs`)
+
+```mermaid
+flowchart LR
+    subgraph NET["🐳 Docker Compose network"]
+        FE["🎨 insurance-frontend<br/>:8501"]
+        BE["🔌 insurance-backend<br/>:8000"]
+        FE -- "API_BASE_URL=http://backend:8000" --> BE
+    end
+    USER["🧑 Browser"] -- ":8501" --> FE
+    USER -- ":8000/docs" --> BE
+
+    classDef svc fill:#1E293B,stroke:#38BDF8,color:#E2E8F0,stroke-width:2px;
+    class FE,BE svc;
+```
+
+### 🔨 Build the images yourself
+
+```bash
+# Backend
+docker build -f DockerFile.Backend -t wahab2825/insurance-premium-predictor-api .
+
+# Frontend
+docker build -f DockerFile.Frontend -t wahab2825/insurance-premium-predictor-frontend .
+```
+
+### 🚂 Live on Railway
+
+Both images are deployed as separate services on **[Railway](https://railway.app)**, each with its own public URL:
+
+| Service | Public URL |
+|---------|------------|
+| 🎨 **Frontend** | **https://insurance-premium-predictor-frontend-production.up.railway.app** |
+| 🔌 **Backend** | **https://insurance-premium-predictor-api-production.up.railway.app** ([`/docs`](https://insurance-premium-predictor-api-production.up.railway.app/docs)) |
+
+> On Railway the frontend service sets **`API_BASE_URL`** to the backend's public URL (`https://insurance-premium-predictor-api-production.up.railway.app`) so the deployed UI talks to the deployed API.
 
 ---
 
