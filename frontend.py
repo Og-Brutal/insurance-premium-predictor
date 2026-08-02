@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import requests
 import streamlit as st
-
+import os 
 # ---------------------------------------------------------------------------
 # Page config
 # ---------------------------------------------------------------------------
@@ -15,7 +15,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-DEFAULT_API_URL = "http://127.0.0.1:8000"
+
+DEFAULT_API_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 TIER_1_CITIES = [
     "Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune",
